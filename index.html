@@ -1,0 +1,2951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Nova AI - Ultimate Assistant</title>
+    <link rel="manifest" href="data:application/json,{%22name%22:%22Nova%20AI%22,%22short_name%22:%22Nova%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23000000%22,%22theme_color%22:%22%23007AFF%22}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nova AI">
+    <meta name="theme-color" content="#007AFF">
+    <meta name="mobile-web-app-capable" content="yes">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        :root {
+            --ios-blue: #007AFF;
+            --ios-gray: #8E8E93;
+            --ios-light-gray: #F2F2F7;
+            --ios-dark-gray: #1C1C1E;
+            --ios-background: #FFFFFF;
+            --ios-surface: #F9F9F9;
+            --ios-text-primary: #000000;
+            --ios-text-secondary: #3C3C43;
+            --ios-user-bubble: #007AFF;
+            --ios-ai-bubble: #E5E5EA;
+            --ios-shadow: rgba(0, 0, 0, 0.1);
+            --ios-blur: rgba(255, 255, 255, 0.8);
+            --safe-area-top: env(safe-area-inset-top);
+            --safe-area-bottom: env(safe-area-inset-bottom);
+            --border-radius: 16px;
+            --border-radius-large: 20px;
+        }
+
+        [data-theme="dark"] {
+            --ios-background: #000000;
+            --ios-surface: #1C1C1E;
+            --ios-text-primary: #FFFFFF;
+            --ios-text-secondary: #EBEBF5;
+            --ios-ai-bubble: #2C2C2E;
+            --ios-blur: rgba(28, 28, 30, 0.8);
+            --ios-shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: var(--ios-background);
+            color: var(--ios-text-primary);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            padding-top: var(--safe-area-top);
+            padding-bottom: var(--safe-area-bottom);
+        }
+
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .background-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0.05;
+            z-index: -1;
+        }
+
+        .nav-bar {
+            height: 88px;
+            padding-top: 44px;
+            background: var(--ios-blur);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-left: 20px;
+            padding-right: 20px;
+            z-index: 100;
+            position: sticky;
+            top: var(--safe-area-top);
+        }
+
+        .nav-title {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .nav-icon {
+            width: 28px;
+            height: 28px;
+            opacity: 0.8;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .nav-icon:active {
+            transform: scale(0.9);
+            opacity: 1;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #30D158;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--ios-blur);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .quick-actions::-webkit-scrollbar {
+            display: none;
+        }
+
+        .quick-action {
+            padding: 8px 16px;
+            background: var(--ios-surface);
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .quick-action:active {
+            transform: scale(0.95);
+            background: var(--ios-blue);
+            color: white;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px 100px 20px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 0px;
+            display: none;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message.ai {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: var(--border-radius);
+            word-wrap: break-word;
+            position: relative;
+            line-height: 1.4;
+            font-size: 16px;
+        }
+
+        .message.user .message-bubble {
+            background: var(--ios-user-bubble);
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.ai .message-bubble {
+            background: var(--ios-ai-bubble);
+            color: var(--ios-text-primary);
+            border-bottom-left-radius: 6px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        .image-card {
+            background: var(--ios-surface);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin-top: 8px;
+            box-shadow: 0 2px 10px var(--ios-shadow);
+            cursor: pointer;
+            transition: transform 0.2s;
+            touch-action: manipulation;
+        }
+
+        .image-card:active {
+            transform: scale(0.98);
+        }
+
+        .image-preview {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .image-info {
+            padding: 10px;
+        }
+
+        .image-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .image-description {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .code-block {
+            background: var(--ios-dark-gray);
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-language {
+            font-size: 12px;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        .copy-code {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-code:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--ios-blur);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+            padding: 12px 20px;
+            padding-bottom: calc(12px + var(--safe-area-bottom));
+            z-index: 100;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .voice-button {
+            width: 40px;
+            height: 40px;
+            background: var(--ios-surface);
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .voice-button:active {
+            transform: scale(0.9);
+        }
+
+        .voice-button.recording {
+            background: #FF3B30;
+            color: white;
+            animation: recording 1.5s infinite;
+        }
+
+        @keyframes recording {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .upload-button {
+            width: 40px;
+            height: 40px;
+            background: var(--ios-surface);
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .upload-button:active {
+            transform: scale(0.9);
+        }
+
+        .input-field {
+            flex: 1;
+            height: 40px;
+            background: var(--ios-surface);
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            padding: 0 16px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .input-field:focus {
+            border-color: var(--ios-blue);
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+        }
+
+        .send-button {
+            width: 40px;
+            height: 40px;
+            background: var(--ios-blue);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .send-button:active {
+            transform: scale(0.9);
+        }
+
+        .send-button:disabled {
+            background: var(--ios-gray);
+            opacity: 0.5;
+            transform: none;
+        }
+
+        .send-icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 14px;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--ios-gray);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            cursor: pointer;
+            padding: var(--safe-area-top) var(--safe-area-bottom);
+        }
+
+        .fullscreen-overlay.active {
+            display: flex;
+        }
+
+        .fullscreen-image {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: var(--border-radius);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .close-fullscreen {
+            position: absolute;
+            top: calc(44px + var(--safe-area-top));
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            touch-action: manipulation;
+        }
+
+        .close-fullscreen:active {
+            opacity: 1;
+            transform: scale(0.9);
+        }
+
+        .search-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--ios-blur);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            z-index: 300;
+            padding: calc(88px + var(--safe-area-top)) 20px 20px;
+        }
+
+        .search-overlay.active {
+            display: flex;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 50px;
+            background: var(--ios-surface);
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            padding: 0 20px;
+            font-size: 18px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--ios-blue);
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+        }
+
+        .search-results {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .search-result {
+            padding: 12px;
+            background: var(--ios-surface);
+            border-radius: var(--border-radius);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+
+        .search-result:active {
+            background: rgba(0, 122, 255, 0.1);
+            transform: scale(0.98);
+        }
+
+        .search-result-text {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .search-result-time {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 400;
+        }
+
+        .menu-overlay.active {
+            display: block;
+        }
+
+        .menu-panel {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100%;
+            background: var(--ios-surface);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
+            transition: right 0.3s ease-out;
+            z-index: 401;
+            padding-top: calc(88px + var(--safe-area-top));
+            padding-bottom: var(--safe-area-bottom);
+        }
+
+        .menu-panel.active {
+            right: 0;
+        }
+
+        .menu-header {
+            padding: 20px;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-user-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .menu-user-email {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .menu-items {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            touch-action: manipulation;
+        }
+
+        .menu-item:active {
+            background: rgba(0, 122, 255, 0.1);
+        }
+
+        .menu-icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.7;
+        }
+
+        .menu-text {
+            font-size: 16px;
+        }
+
+        .menu-divider {
+            height: 0.5px;
+            background: rgba(0, 0, 0, 0.1);
+            margin: 12px 0;
+        }
+
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--ios-blur);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: var(--safe-area-top) var(--safe-area-bottom);
+        }
+
+        .auth-container {
+            background: var(--ios-surface);
+            border-radius: var(--border-radius-large);
+            padding: 24px;
+            width: 90%;
+            max-width: 350px;
+            box-shadow: 0 10px 40px var(--ios-shadow);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .auth-logo {
+            width: 50px;
+            height: 50px;
+            background: var(--ios-blue);
+            border-radius: 12px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .auth-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .auth-subtitle {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .auth-input {
+            height: 44px;
+            background: var(--ios-background);
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            padding: 0 16px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+        }
+
+        .auth-input:focus {
+            border-color: var(--ios-blue);
+        }
+
+        .auth-button {
+            height: 44px;
+            background: var(--ios-blue);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+
+        .auth-button:active {
+            transform: scale(0.98);
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        .auth-link {
+            color: var(--ios-blue);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .profile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--ios-blur);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1800;
+            padding: var(--safe-area-top) var(--safe-area-bottom);
+        }
+
+        .profile-overlay.active {
+            display: flex;
+        }
+
+        .profile-container {
+            background: var(--ios-surface);
+            border-radius: var(--border-radius-large);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px var(--ios-shadow);
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, var(--ios-blue), #5AC8FA);
+            color: white;
+            padding: 32px;
+            text-align: center;
+            border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+            position: relative;
+        }
+
+        .profile-avatar-large {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .profile-email {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .profile-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 18px;
+        }
+
+        .profile-tabs {
+            display: flex;
+            background: var(--ios-background);
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ios-gray);
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .profile-tab.active {
+            color: var(--ios-blue);
+            border-bottom-color: var(--ios-blue);
+        }
+
+        .profile-content {
+            padding: 24px;
+        }
+
+        .profile-section {
+            margin-bottom: 24px;
+        }
+
+        .profile-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .profile-form-group {
+            margin-bottom: 16px;
+        }
+
+        .profile-label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ios-text-secondary);
+        }
+
+        .profile-input {
+            width: 100%;
+            height: 44px;
+            background: var(--ios-background);
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            padding: 0 16px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .profile-input:focus {
+            border-color: var(--ios-blue);
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+        }
+
+        .profile-button {
+            width: 100%;
+            height: 44px;
+            background: var(--ios-blue);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .profile-button:active {
+            transform: scale(0.98);
+        }
+
+        .profile-button.secondary {
+            background: var(--ios-background);
+            color: var(--ios-text-primary);
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-button.danger {
+            background: #FF3B30;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--ios-blur);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1900;
+            padding: var(--safe-area-top) var(--safe-area-bottom);
+        }
+
+        .settings-overlay.active {
+            display: flex;
+        }
+
+        .settings-container {
+            background: var(--ios-surface);
+            border-radius: var(--border-radius-large);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px var(--ios-shadow);
+        }
+
+        .settings-header {
+            background: linear-gradient(135deg, var(--ios-blue), #5AC8FA);
+            color: white;
+            padding: 24px;
+            text-align: center;
+            border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+            position: relative;
+        }
+
+        .settings-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .settings-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 18px;
+        }
+
+        .settings-content {
+            padding: 24px;
+        }
+
+        .settings-section {
+            margin-bottom: 32px;
+        }
+
+        .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--ios-text-primary);
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--ios-background);
+            border-radius: var(--border-radius);
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .settings-item:active {
+            background: rgba(0, 122, 255, 0.1);
+            transform: scale(0.98);
+        }
+
+        .settings-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-info {
+            flex: 1;
+        }
+
+        .settings-label {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .settings-description {
+            font-size: 14px;
+            color: var(--ios-text-secondary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 51px;
+            height: 31px;
+            background: var(--ios-gray);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle-switch.active {
+            background: var(--ios-blue);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 27px;
+            height: 27px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(20px);
+        }
+
+        .settings-select {
+            width: 120px;
+            height: 36px;
+            background: var(--ios-background);
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 0 12px;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .settings-select:focus {
+            border-color: var(--ios-blue);
+        }
+
+        .settings-button {
+            padding: 8px 16px;
+            background: var(--ios-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .settings-button:active {
+            transform: scale(0.95);
+        }
+
+        .settings-button.secondary {
+            background: var(--ios-background);
+            color: var(--ios-text-primary);
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-button.danger {
+            background: #FF3B30;
+        }
+
+        .slider-container {
+            width: 150px;
+        }
+
+        .settings-slider {
+            width: 100%;
+            height: 4px;
+            background: var(--ios-gray);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .settings-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--ios-blue);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .settings-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: var(--ios-blue);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            border: none;
+        }
+
+        .slider-value {
+            text-align: center;
+            font-size: 12px;
+            color: var(--ios-text-secondary);
+            margin-top: 4px;
+        }
+
+        .error-message {
+            background: rgba(255, 59, 48, 0.1);
+            color: #FF3B30;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            text-align: center;
+            margin: 8px 0;
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--ios-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-email {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .sign-out-button {
+            background: none;
+            border: none;
+            color: var(--ios-gray);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .sign-out-button:active {
+            background: rgba(255, 59, 48, 0.1);
+            color: #FF3B30;
+        }
+
+        .file-upload {
+            display: none;
+        }
+
+        .uploaded-file {
+            background: var(--ios-surface);
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            padding: 12px;
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .file-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--ios-blue);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .file-size {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .remove-file {
+            background: none;
+            border: none;
+            color: var(--ios-gray);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 480px) {
+            .nav-bar {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            
+            .message-bubble {
+                max-width: 80%;
+                font-size: 15px;
+            }
+            
+            .input-container {
+                padding: 10px 16px;
+                padding-bottom: calc(10px + var(--safe-area-bottom));
+            }
+            
+            .quick-actions {
+                padding: 8px 16px;
+            }
+        }
+
+        /* Large screens - limit width */
+        @media (min-width: 768px) {
+            .app-container {
+                max-width: 428px;
+                margin: 0 auto;
+                box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="app-container">
+        <div class="background-gradient"></div>
+        
+        <nav class="nav-bar">
+            <div class="nav-title">Nova AI</div>
+            <div class="nav-icons" id="navIcons">
+                <div class="status-indicator"></div>
+                <svg class="nav-icon" id="search-toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <svg class="nav-icon" id="menu-toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+                <svg class="nav-icon" id="theme-toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+            </div>
+        </nav>
+
+        <div class="quick-actions">
+            <div class="quick-action" data-prompt="Tell me a joke">😄 Joke</div>
+            <div class="quick-action" data-prompt="Help me write an email">✉️ Email</div>
+            <div class="quick-action" data-prompt="Create a workout plan">💪 Fitness</div>
+            <div class="quick-action" data-prompt="Generate a recipe">🍳 Recipe</div>
+            <div class="quick-action" data-prompt="Explain quantum computing">🔬 Science</div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message ai">
+                <div class="message-bubble">
+                    <div>Hello! I'm Nova, your AI assistant. How can I help you today?</div>
+                    <div class="message-time">10:30 AM</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <button class="voice-button" id="voiceButton">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                </button>
+                <button class="upload-button" id="uploadButton">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                </button>
+                <input type="text" class="input-field" id="messageInput" placeholder="Type a message..." autocomplete="off">
+                <button class="send-button" id="sendButton">
+                    <svg class="send-icon" viewBox="0 0 24 24" fill="white">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <div class="close-fullscreen" id="closeFullscreen">×</div>
+        <img class="fullscreen-image" id="fullscreenImage" src="" alt="">
+    </div>
+
+    <div class="search-overlay" id="searchOverlay">
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search conversations..." autocomplete="off">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+
+    <div class="menu-overlay" id="menuOverlay"></div>
+    
+    <div class="menu-panel" id="menuPanel">
+        <div class="menu-header">
+            <div class="menu-user-name" id="menuUserName">User</div>
+            <div class="menu-user-email" id="menuUserEmail">user@example.com</div>
+        </div>
+        <div class="menu-items">
+            <div class="menu-item" id="profileItem">
+                <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span class="menu-text">Profile</span>
+            </div>
+            <div class="menu-item" id="newChatItem">
+                <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                <span class="menu-text">New Chat</span>
+            </div>
+            <div class="menu-item" id="clearChatItem">
+                <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
+                </svg>
+                <span class="menu-text">Clear Chat</span>
+            </div>
+            <div class="menu-item" id="exportChatItem">
+                <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                <span class="menu-text">Export Chat</span>
+            </div>
+            <div class="menu-divider"></div>
+            <div class="menu-item" id="settingsItem">
+                <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 1.54l4.24 4.24M1 12h6m6 0h6"/>
+                </svg>
+                <span class="menu-text">Settings</span>
+            </div>
+            <div class="menu-item" id="aboutItem">
+                <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4M12 8h.01"/>
+                </svg>
+                <span class="menu-text">About</span>
+            </div>
+            <div class="menu-divider"></div>
+            <div class="menu-item" id="signOutItem">
+                <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+                </svg>
+                <span class="menu-text">Sign Out</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-logo">N</div>
+                <div class="auth-title">Welcome</div>
+                <div class="auth-subtitle">Sign in to Nova AI</div>
+            </div>
+            
+            <form class="auth-form" id="authForm">
+                <input type="email" class="auth-input" id="authEmail" placeholder="Email address" required>
+                <input type="password" class="auth-input" id="authPassword" placeholder="Password" required>
+                <button type="submit" class="auth-button">Sign In</button>
+            </form>
+            
+            <div class="auth-switch">
+                <span>Don't have an account? <a class="auth-link" id="signUpLink">Sign Up</a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-overlay" id="profileOverlay">
+        <div class="profile-container">
+            <div class="profile-header">
+                <div class="profile-close" id="profileClose">×</div>
+                <div class="profile-avatar-large" id="profileAvatarLarge">U</div>
+                <div class="profile-name" id="profileName">User Name</div>
+                <div class="profile-email" id="profileEmail">user@example.com</div>
+            </div>
+            
+            <div class="profile-tabs">
+                <div class="profile-tab active" data-tab="general">General</div>
+                <div class="profile-tab" data-tab="stats">Statistics</div>
+            </div>
+            
+            <div class="profile-content">
+                <div class="tab-content active" id="general-tab">
+                    <div class="profile-section">
+                        <div class="profile-section-title">Personal Information</div>
+                        <div class="profile-form-group">
+                            <div class="profile-label">Full Name</div>
+                            <input type="text" class="profile-input" id="profileNameInput" placeholder="Enter your name">
+                        </div>
+                        <div class="profile-form-group">
+                            <div class="profile-label">Email Address</div>
+                            <input type="email" class="profile-input" id="profileEmailInput" placeholder="Enter your email" readonly>
+                        </div>
+                        <button class="profile-button" id="saveProfileBtn">Save Changes</button>
+                    </div>
+                    
+                    <div class="profile-section">
+                        <div class="profile-section-title">Account</div>
+                        <button class="profile-button secondary" id="changePasswordBtn">Change Password</button>
+                        <button class="profile-button secondary" id="exportDataBtn">Export My Data</button>
+                        <button class="profile-button danger" id="deleteAccountBtn">Delete Account</button>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="stats-tab">
+                    <div class="profile-section">
+                        <div class="profile-section-title">Usage Statistics</div>
+                        <div class="profile-form-group">
+                            <div class="profile-label">Total Messages</div>
+                            <div class="profile-input" id="totalMessagesStat" readonly value="0"></div>
+                        </div>
+                        <div class="profile-form-group">
+                            <div class="profile-label">Images Generated</div>
+                            <div class="profile-input" id="totalImagesStat" readonly value="0"></div>
+                        </div>
+                        <div class="profile-form-group">
+                            <div class="profile-label">Days Active</div>
+                            <div class="profile-input" id="totalDaysStat" readonly value="0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-container">
+            <div class="settings-header">
+                <div class="settings-title">Settings</div>
+                <div class="settings-close" id="settingsClose">×</div>
+            </div>
+            
+            <div class="settings-content">
+                <div class="settings-section">
+                    <div class="settings-section-title">Appearance</div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Dark Mode</div>
+                            <div class="settings-description">Use dark theme across the app</div>
+                        </div>
+                        <div class="toggle-switch" id="darkModeToggle"></div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Font Size</div>
+                            <div class="settings-description">Adjust text size for better readability</div>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" class="settings-slider" id="fontSizeSlider" min="14" max="20" value="16">
+                            <div class="slider-value" id="fontSizeValue">16px</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-section-title">Notifications</div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Message Notifications</div>
+                            <div class="settings-description">Get notified for new messages</div>
+                        </div>
+                        <div class="toggle-switch active" id="messageNotificationsToggle"></div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Sound Effects</div>
+                            <div class="settings-description">Play sounds for interactions</div>
+                        </div>
+                        <div class="toggle-switch" id="soundEffectsToggle"></div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Vibration</div>
+                            <div class="settings-description">Haptic feedback on mobile devices</div>
+                        </div>
+                        <div class="toggle-switch active" id="vibrationToggle"></div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-section-title">Privacy</div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Save Conversations</div>
+                            <div class="settings-description">Automatically save chat history</div>
+                        </div>
+                        <div class="toggle-switch active" id="saveConversationsToggle"></div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Usage Analytics</div>
+                            <div class="settings-description">Help improve Nova AI with anonymous data</div>
+                        </div>
+                        <div class="toggle-switch" id="analyticsToggle"></div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Crash Reports</div>
+                            <div class="settings-description">Automatically send error reports</div>
+                        </div>
+                        <div class="toggle-switch active" id="crashReportsToggle"></div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-section-title">AI Model</div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Default Model</div>
+                            <div class="settings-description">Choose your preferred AI model</div>
+                        </div>
+                        <select class="settings-select" id="defaultModelSelect">
+                            <option value="gpt-4">GPT-4</option>
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                            <option value="claude-3">Claude 3</option>
+                        </select>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Response Length</div>
+                            <div class="settings-description">Maximum tokens for AI responses</div>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" class="settings-slider" id="responseLengthSlider" min="100" max="1000" value="500" step="50">
+                            <div class="slider-value" id="responseLengthValue">500</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-section-title">Data & Storage</div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Clear Cache</div>
+                            <div class="settings-description">Remove temporary files and data</div>
+                        </div>
+                        <button class="settings-button secondary" id="clearCacheBtn">Clear</button>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Export All Data</div>
+                            <div class="settings-description">Download your complete Nova AI data</div>
+                        </div>
+                        <button class="settings-button secondary" id="exportAllDataBtn">Export</button>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Reset Settings</div>
+                            <div class="settings-description">Restore default settings</div>
+                        </div>
+                        <button class="settings-button danger" id="resetSettingsBtn">Reset</button>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-section-title">About</div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Version</div>
+                            <div class="settings-description">Nova AI v3.0 Ultimate</div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Developer</div>
+                            <div class="settings-description">Created with ❤️ for mobile devices</div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-label">Check for Updates</div>
+                            <div class="settings-description">Get the latest features and improvements</div>
+                        </div>
+                        <button class="settings-button secondary" id="checkUpdatesBtn">Check</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileUpload" class="file-upload" accept="image/*,.pdf,.txt,.doc,.docx" multiple>
+
+    <script>
+        // DOM Elements
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const themeToggle = document.getElementById('theme-toggle');
+        const fullscreenOverlay = document.getElementById('fullscreenOverlay');
+        const fullscreenImage = document.getElementById('fullscreenImage');
+        const closeFullscreen = document.getElementById('closeFullscreen');
+        const voiceButton = document.getElementById('voiceButton');
+        const uploadButton = document.getElementById('uploadButton');
+        const fileUpload = document.getElementById('fileUpload');
+        const authOverlay = document.getElementById('authOverlay');
+        const authForm = document.getElementById('authForm');
+        const authEmail = document.getElementById('authEmail');
+        const authPassword = document.getElementById('authPassword');
+        const signUpLink = document.getElementById('signUpLink');
+
+        // Menu and Search Elements
+        const searchToggle = document.getElementById('search-toggle');
+        const menuToggle = document.getElementById('menu-toggle');
+        const searchOverlay = document.getElementById('searchOverlay');
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const menuPanel = document.getElementById('menuPanel');
+        const menuUserName = document.getElementById('menuUserName');
+        const menuUserEmail = document.getElementById('menuUserEmail');
+
+        // Profile Elements
+        const profileOverlay = document.getElementById('profileOverlay');
+        const profileClose = document.getElementById('profileClose');
+        const profileTabs = document.querySelectorAll('.profile-tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // Settings Elements
+        const settingsOverlay = document.getElementById('settingsOverlay');
+        const settingsClose = document.getElementById('settingsClose');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        const messageNotificationsToggle = document.getElementById('messageNotificationsToggle');
+        const soundEffectsToggle = document.getElementById('soundEffectsToggle');
+        const vibrationToggle = document.getElementById('vibrationToggle');
+        const saveConversationsToggle = document.getElementById('saveConversationsToggle');
+        const analyticsToggle = document.getElementById('analyticsToggle');
+        const crashReportsToggle = document.getElementById('crashReportsToggle');
+        const defaultModelSelect = document.getElementById('defaultModelSelect');
+        const responseLengthSlider = document.getElementById('responseLengthSlider');
+        const responseLengthValue = document.getElementById('responseLengthValue');
+        const clearCacheBtn = document.getElementById('clearCacheBtn');
+        const exportAllDataBtn = document.getElementById('exportAllDataBtn');
+        const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+        const checkUpdatesBtn = document.getElementById('checkUpdatesBtn');
+
+        // State
+        let isDarkMode = false;
+        let currentUser = null;
+        let isRecording = false;
+        let recognition = null;
+        let uploadedFiles = [];
+        let selectedModel = 'gpt-4';
+        let settings = {
+            fontSize: 16,
+            messageNotifications: true,
+            soundEffects: false,
+            vibration: true,
+            saveConversations: true,
+            analytics: false,
+            crashReports: true,
+            responseLength: 500
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            loadSettings();
+            checkAuth();
+            setupVoiceRecognition();
+            setupEventListeners();
+            
+            // Focus input on load
+            setTimeout(() => messageInput.focus(), 100);
+        });
+
+        // Settings management
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('novaSettings');
+            if (savedSettings) {
+                settings = { ...settings, ...JSON.parse(savedSettings) };
+            }
+            
+            // Apply settings to UI
+            applySettings();
+        }
+
+        function saveSettings() {
+            localStorage.setItem('novaSettings', JSON.stringify(settings));
+        }
+
+        function applySettings() {
+            // Dark mode
+            darkModeToggle.classList.toggle('active', isDarkMode);
+            
+            // Font size
+            fontSizeSlider.value = settings.fontSize;
+            fontSizeValue.textContent = `${settings.fontSize}px`;
+            document.documentElement.style.fontSize = `${settings.fontSize}px`;
+            
+            // Toggles
+            messageNotificationsToggle.classList.toggle('active', settings.messageNotifications);
+            soundEffectsToggle.classList.toggle('active', settings.soundEffects);
+            vibrationToggle.classList.toggle('active', settings.vibration);
+            saveConversationsToggle.classList.toggle('active', settings.saveConversations);
+            analyticsToggle.classList.toggle('active', settings.analytics);
+            crashReportsToggle.classList.toggle('active', settings.crashReports);
+            
+            // Model select
+            defaultModelSelect.value = selectedModel;
+            
+            // Response length
+            responseLengthSlider.value = settings.responseLength;
+            responseLengthValue.textContent = settings.responseLength;
+        }
+
+        // Theme management
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                isDarkMode = true;
+                document.body.setAttribute('data-theme', 'dark');
+            }
+        }
+
+        themeToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            settings.fontSize = isDarkMode ? 'dark' : 'light';
+            document.body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+            saveSettings();
+            applySettings();
+        });
+
+        // Authentication
+        function checkAuth() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                hideAuth();
+                loadUserConversations();
+                showUserProfile();
+            } else {
+                showAuth();
+            }
+        }
+
+        function showAuth() {
+            authOverlay.style.display = 'flex';
+        }
+
+        function hideAuth() {
+            authOverlay.style.display = 'none';
+        }
+
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = authEmail.value.trim();
+            const password = authPassword.value;
+            
+            if (email && password) {
+                // Check if user already exists
+                const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
+                const existingUser = existingUsers.find(u => u.email === email);
+                
+                let user;
+                if (existingUser) {
+                    // Sign in existing user
+                    user = existingUser;
+                } else {
+                    // Create new user
+                    user = {
+                        id: Date.now(),
+                        name: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
+                        email: email,
+                        password: password,
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    // Save to users list
+                    existingUsers.push(user);
+                    localStorage.setItem('users', JSON.stringify(existingUsers));
+                }
+                
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                hideAuth();
+                
+                // Load user conversations (this will show welcome if new user)
+                loadUserConversations();
+                showUserProfile();
+                
+                // Reset form
+                authForm.reset();
+                
+                // Focus input
+                setTimeout(() => {
+                    messageInput.focus();
+                }, 300);
+            }
+        });
+
+        signUpLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const email = prompt('Enter your email:');
+            const password = prompt('Enter your password:');
+            
+            if (email && password) {
+                // Check if user already exists
+                const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
+                const existingUser = existingUsers.find(u => u.email === email);
+                
+                if (existingUser) {
+                    alert('An account with this email already exists. Please sign in instead.');
+                    return;
+                }
+                
+                // Create new user
+                const user = {
+                    id: Date.now(),
+                    name: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
+                    email: email,
+                    password: password,
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Save to users list
+                existingUsers.push(user);
+                localStorage.setItem('users', JSON.stringify(existingUsers));
+                
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                hideAuth();
+                
+                // Load user conversations (will show welcome message)
+                loadUserConversations();
+                showUserProfile();
+                
+                setTimeout(() => {
+                    messageInput.focus();
+                }, 300);
+            }
+        });
+
+        // Voice recognition
+        function setupVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    voiceButton.classList.add('recording');
+                    messageInput.placeholder = 'Listening...';
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    messageInput.value = transcript;
+                };
+
+                recognition.onend = () => {
+                    isRecording = false;
+                    voiceButton.classList.remove('recording');
+                    messageInput.placeholder = 'Type a message...';
+                    if (messageInput.value.trim()) {
+                        sendMessage();
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    isRecording = false;
+                    voiceButton.classList.remove('recording');
+                    messageInput.placeholder = 'Type a message...';
+                };
+            }
+        }
+
+        voiceButton.addEventListener('click', () => {
+            if (recognition && !isRecording) {
+                recognition.start();
+            } else if (isRecording) {
+                recognition.stop();
+            } else {
+                showError('Voice input not supported on this device');
+            }
+        });
+
+        // File upload
+        uploadButton.addEventListener('click', () => {
+            fileUpload.click();
+        });
+
+        fileUpload.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                uploadedFiles.push(file);
+                displayUploadedFile(file);
+            });
+            fileUpload.value = '';
+        });
+
+        function displayUploadedFile(file) {
+            const fileDiv = document.createElement('div');
+            fileDiv.className = 'uploaded-file';
+            fileDiv.innerHTML = `
+                <div class="file-icon">📄</div>
+                <div class="file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${formatFileSize(file.size)}</div>
+                </div>
+                <button class="remove-file" onclick="removeFile(this, '${file.name}')">×</button>
+            `;
+            
+            const lastMessage = chatContainer.lastElementChild;
+            if (lastMessage && lastMessage.classList.contains('user')) {
+                lastMessage.querySelector('.message-bubble').appendChild(fileDiv);
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function removeFile(button, fileName) {
+            uploadedFiles = uploadedFiles.filter(file => file.name !== fileName);
+            button.closest('.uploaded-file').remove();
+        }
+
+        // Message handling
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || !currentUser) return;
+
+            addMessage(message, 'user');
+            messageInput.value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            // Simulate AI response
+            setTimeout(() => {
+                hideTypingIndicator();
+                
+                // Check for image-related requests
+                const imageKeywords = ['image', 'generate', 'create', 'make', 'draw', 'picture', 'photo', 'visual'];
+                const hasImageRequest = imageKeywords.some(keyword => 
+                    message.toLowerCase().includes(keyword)
+                );
+                
+                if (hasImageRequest) {
+                    // Add a message explaining the limitation first
+                    addMessage("I notice you're asking about image generation. Please note that image creation has some limitations and may occasionally fail. Let me try to generate something for you:", 'ai');
+                    
+                    // Then attempt image generation
+                    setTimeout(() => {
+                        addImageResponse();
+                    }, 1000);
+                } else {
+                    const responses = [
+                        "I understand what you're saying. Let me help you with that.",
+                        "That's an interesting question! Here's what I think...",
+                        "I can definitely assist you with that. Here's my response:",
+                        "Great point! Let me provide you with some information."
+                    ];
+                    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                    addMessage(randomResponse, 'ai');
+                }
+            }, 1500);
+        }
+
+        function addMessage(text, sender) {
+            if (!currentUser && sender === 'user') {
+                showError('Please sign in to send messages');
+                return;
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const time = new Date().toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            
+            let processedContent = text;
+            
+            // Process markdown for AI messages
+            if (sender === 'ai') {
+                processedContent = processMarkdown(text);
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-bubble">
+                    <div>${processedContent}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Save conversation
+            saveUserConversations();
+        }
+
+        function processMarkdown(text) {
+            // Simple markdown processing
+            let processed = text;
+            
+            // Code blocks
+            processed = processed.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+                return `<div class="code-block">
+                    <div class="code-header">
+                        <span class="code-language">${lang || 'text'}</span>
+                        <button class="copy-code" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre>${code}</pre>
+                </div>`;
+            });
+            
+            // Inline code
+            processed = processed.replace(/`(.+?)`/g, '<code>$1</code>');
+            
+            return processed;
+        }
+
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('pre').textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        function addImageResponse() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai';
+            
+            const time = new Date().toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            
+            // Simulate image generation with random success
+            const imageGenerationSuccess = Math.random() > 0.3; // 70% success rate
+            
+            if (imageGenerationSuccess) {
+                const imageUrl = `https://picsum.photos/seed/${Math.random().toString(36).substr(2, 9)}/400/300.jpg`;
+                
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">
+                        <div>I've generated an image for you!</div>
+                        <div class="image-card" onclick="openFullscreen('${imageUrl}')">
+                            <img class="image-preview" src="${imageUrl}" alt="Generated image">
+                            <div class="image-info">
+                                <div class="image-title">AI Generated Image</div>
+                                <div class="image-description">Created with Nova AI</div>
+                            </div>
+                        </div>
+                        <div class="message-time">${time}</div>
+                    </div>
+                `;
+            } else {
+                // Show error message for image generation failure
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">
+                        <div>❌ Sorry, I encountered an error while generating the image. The image generation service is currently unavailable. Please try again later.</div>
+                        <div class="message-time">${time}</div>
+                    </div>
+                `;
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            saveUserConversations();
+        }
+
+        function showTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'message ai typing-indicator active';
+            indicator.id = 'typingIndicator';
+            indicator.innerHTML = `
+                <div class="message-bubble">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(indicator);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function openFullscreen(imageUrl) {
+            fullscreenImage.src = imageUrl;
+            fullscreenOverlay.classList.add('active');
+        }
+
+        function closeFullscreenOverlay() {
+            fullscreenOverlay.classList.remove('active');
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            chatContainer.appendChild(errorDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        // Quick actions
+        document.querySelectorAll('.quick-action').forEach(action => {
+            action.addEventListener('click', () => {
+                const prompt = action.getAttribute('data-prompt');
+                messageInput.value = prompt;
+                messageInput.focus();
+                
+                // Scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            });
+        });
+
+        // Search functionality
+        function openSearch() {
+            searchOverlay.classList.add('active');
+            searchInput.focus();
+        }
+
+        function closeSearch() {
+            searchOverlay.classList.remove('active');
+            searchInput.value = '';
+            searchResults.innerHTML = '';
+        }
+
+        function handleSearch() {
+            const query = searchInput.value.toLowerCase().trim();
+            if (query.length < 2) {
+                searchResults.innerHTML = '';
+                return;
+            }
+
+            const messages = Array.from(chatContainer.querySelectorAll('.message'));
+            const results = messages.filter(msg => {
+                const text = msg.querySelector('.message-bubble > div').textContent.toLowerCase();
+                return text.includes(query);
+            });
+
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="search-result"><div class="search-result-text">No results found</div></div>';
+            } else {
+                searchResults.innerHTML = results.map(msg => {
+                    const isUser = msg.classList.contains('user');
+                    const text = msg.querySelector('.message-bubble > div').textContent;
+                    const time = msg.querySelector('.message-time').textContent;
+                    return `
+                        <div class="search-result" onclick="scrollToMessage(this)">
+                            <div class="search-result-text">${isUser ? 'You: ' : 'Nova: '}${text.substring(0, 100)}${text.length > 100 ? '...' : ''}</div>
+                            <div class="search-result-time">${time}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function scrollToMessage(element) {
+            closeSearch();
+            chatContainer.scrollTop = 0;
+        }
+
+        // Menu functionality
+        function openMenu() {
+            menuOverlay.classList.add('active');
+            menuPanel.classList.add('active');
+            updateMenuUserInfo();
+        }
+
+        function closeMenu() {
+            menuOverlay.classList.remove('active');
+            menuPanel.classList.remove('active');
+        }
+
+        function updateMenuUserInfo() {
+            if (currentUser) {
+                menuUserName.textContent = currentUser.name;
+                menuUserEmail.textContent = currentUser.email;
+            }
+        }
+
+        function newChat() {
+            if (confirm('Start a new conversation? Current chat will be saved.')) {
+                saveUserConversations();
+                
+                const newConversation = `
+                    <div class="message ai">
+                        <div class="message-bubble">
+                            <div>Hello! I'm Nova, your AI assistant. How can I help you today?</div>
+                            <div class="message-time">${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</div>
+                        </div>
+                    </div>
+                `;
+                
+                chatContainer.innerHTML = newConversation;
+                saveUserConversations();
+                
+                closeMenu();
+                setTimeout(() => {
+                    messageInput.focus();
+                }, 300);
+            }
+        }
+
+        function clearChat() {
+            if (confirm('Clear all messages? This cannot be undone.')) {
+                const freshConversation = `
+                    <div class="message ai">
+                        <div class="message-bubble">
+                            <div>Hello! I'm Nova, your AI assistant. How can I help you today?</div>
+                            <div class="message-time">${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</div>
+                        </div>
+                    </div>
+                `;
+                
+                chatContainer.innerHTML = freshConversation;
+                saveUserConversations();
+                
+                closeMenu();
+                setTimeout(() => {
+                    messageInput.focus();
+                }, 300);
+            }
+        }
+
+        function exportChat() {
+            const messages = Array.from(chatContainer.querySelectorAll('.message')).map(msg => {
+                const isUser = msg.classList.contains('user');
+                const text = msg.querySelector('.message-bubble > div').textContent;
+                const time = msg.querySelector('.message-time').textContent;
+                return `${isUser ? 'You' : 'Nova'} [${time}]: ${text}`;
+            }).join('\n\n');
+            
+            const blob = new Blob([messages], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nova-chat-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            closeMenu();
+        }
+
+        function openSettings() {
+            closeMenu();
+            settingsOverlay.classList.add('active');
+        }
+
+        function closeSettings() {
+            settingsOverlay.classList.remove('active');
+        }
+
+        function showAbout() {
+            closeMenu();
+            alert('Nova AI v3.0 - Ultimate Mobile Assistant\n\nFeatures:\n• Voice input\n• Image generation\n• File upload\n• Dark mode\n• Search\n• Profile management\n• Export conversations\n• Markdown support\n• Code highlighting\n\nMade with ❤️ for mobile devices');
+        }
+
+        function signOut() {
+            if (confirm('Sign out of Nova AI?')) {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                hideAuth();
+                closeMenu();
+                checkAuth();
+            }
+        }
+
+        function triggerHapticFeedback() {
+            if (settings.vibration && navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        function exportAllUserData() {
+            const allData = {
+                profile: currentUser,
+                conversations: currentUser ? localStorage.getItem(`conversations_${currentUser.id}`) : null,
+                settings: settings,
+                theme: localStorage.getItem('theme'),
+                exportDate: new Date().toISOString(),
+                version: '3.0 Ultimate'
+            };
+            
+            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nova-complete-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showError('All data exported successfully!');
+        }
+
+        // Profile functions
+        function showUserProfile() {
+            if (!currentUser) return;
+            
+            const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('profileAvatarLarge').textContent = initials;
+            document.getElementById('profileName').textContent = currentUser.name;
+            document.getElementById('profileEmail').textContent = currentUser.email;
+            document.getElementById('profileNameInput').value = currentUser.name;
+            document.getElementById('profileEmailInput').value = currentUser.email;
+            
+            // Update stats
+            updateProfileStats();
+        }
+
+        function updateProfileStats() {
+            if (!currentUser) return;
+            
+            const conversations = localStorage.getItem(`conversations_${currentUser.id}`);
+            let totalMessages = 0;
+            let totalImages = 0;
+            
+            if (conversations) {
+                const messageCount = (conversations.match(/class="message"/g) || []).length;
+                totalMessages = Math.floor(messageCount / 2);
+                totalImages = (conversations.match(/class="image-preview"/g) || []).length;
+            }
+            
+            document.getElementById('totalMessagesStat').value = totalMessages;
+            document.getElementById('totalImagesStat').value = totalImages;
+            
+            const createdDate = new Date(currentUser.createdAt);
+            const daysActive = Math.floor((new Date() - createdDate) / (1000 * 60 * 60 * 24));
+            document.getElementById('totalDaysStat').value = daysActive;
+        }
+
+        function openProfile() {
+            if (!currentUser) return;
+            showUserProfile();
+            profileOverlay.classList.add('active');
+        }
+
+        function closeProfile() {
+            profileOverlay.classList.remove('active');
+        }
+
+        // Profile tab switching
+        profileTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.getAttribute('data-tab');
+                
+                profileTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `${targetTab}-tab`) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // Event listeners
+        function setupEventListeners() {
+            sendButton.addEventListener('click', sendMessage);
+            
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            closeFullscreen.addEventListener('click', closeFullscreenOverlay);
+            fullscreenOverlay.addEventListener('click', (e) => {
+                if (e.target === fullscreenOverlay) {
+                    closeFullscreenOverlay();
+                }
+            });
+
+            // Search functionality
+            searchToggle.addEventListener('click', openSearch);
+            searchInput.addEventListener('input', handleSearch);
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Escape') {
+                    closeSearch();
+                }
+            });
+
+            // Menu functionality
+            menuToggle.addEventListener('click', openMenu);
+            menuOverlay.addEventListener('click', closeMenu);
+
+            // Menu items
+            document.getElementById('profileItem').addEventListener('click', () => {
+                closeMenu();
+                openProfile();
+            });
+            document.getElementById('newChatItem').addEventListener('click', newChat);
+            document.getElementById('clearChatItem').addEventListener('click', clearChat);
+            document.getElementById('exportChatItem').addEventListener('click', exportChat);
+            document.getElementById('settingsItem').addEventListener('click', openSettings);
+            document.getElementById('aboutItem').addEventListener('click', showAbout);
+            document.getElementById('signOutItem').addEventListener('click', signOut);
+
+            // Profile events
+            profileClose.addEventListener('click', closeProfile);
+            profileOverlay.addEventListener('click', (e) => {
+                if (e.target === profileOverlay) {
+                    closeProfile();
+                }
+            });
+
+            // Settings events
+            settingsClose.addEventListener('click', closeSettings);
+            settingsOverlay.addEventListener('click', (e) => {
+                if (e.target === settingsOverlay) {
+                    closeSettings();
+                }
+            });
+
+            // Dark mode toggle
+            darkModeToggle.addEventListener('click', () => {
+                isDarkMode = !isDarkMode;
+                document.body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+                settings.darkMode = isDarkMode;
+                saveSettings();
+                applySettings();
+            });
+
+            // Font size slider
+            fontSizeSlider.addEventListener('input', (e) => {
+                settings.fontSize = parseInt(e.target.value);
+                applySettings();
+            });
+
+            fontSizeSlider.addEventListener('change', () => {
+                saveSettings();
+            });
+
+            // Settings toggles
+            messageNotificationsToggle.addEventListener('click', () => {
+                settings.messageNotifications = !settings.messageNotifications;
+                saveSettings();
+                applySettings();
+                if (settings.messageNotifications) {
+                    triggerHapticFeedback();
+                }
+            });
+
+            soundEffectsToggle.addEventListener('click', () => {
+                settings.soundEffects = !settings.soundEffects;
+                saveSettings();
+                applySettings();
+                if (settings.soundEffects) {
+                    triggerHapticFeedback();
+                }
+            });
+
+            vibrationToggle.addEventListener('click', () => {
+                settings.vibration = !settings.vibration;
+                saveSettings();
+                applySettings();
+                if (settings.vibration) {
+                    triggerHapticFeedback();
+                }
+            });
+
+            saveConversationsToggle.addEventListener('click', () => {
+                settings.saveConversations = !settings.saveConversations;
+                saveSettings();
+                applySettings();
+            });
+
+            analyticsToggle.addEventListener('click', () => {
+                settings.analytics = !settings.analytics;
+                saveSettings();
+                applySettings();
+            });
+
+            crashReportsToggle.addEventListener('click', () => {
+                settings.crashReports = !settings.crashReports;
+                saveSettings();
+                applySettings();
+            });
+
+            // Model select
+            defaultModelSelect.addEventListener('change', (e) => {
+                selectedModel = e.target.value;
+                saveSettings();
+                applySettings();
+            });
+
+            // Response length slider
+            responseLengthSlider.addEventListener('input', (e) => {
+                settings.responseLength = parseInt(e.target.value);
+                applySettings();
+            });
+
+            responseLengthSlider.addEventListener('change', () => {
+                saveSettings();
+            });
+
+            // Settings buttons
+            clearCacheBtn.addEventListener('click', () => {
+                if (confirm('Clear all temporary data and cache?')) {
+                    // Clear cache items
+                    const keysToRemove = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && key.startsWith('cache_')) {
+                            keysToRemove.push(key);
+                        }
+                    }
+                    keysToRemove.forEach(key => localStorage.removeItem(key));
+                    
+                    showError('Cache cleared successfully!');
+                }
+            });
+
+            exportAllDataBtn.addEventListener('click', () => {
+                exportAllUserData();
+            });
+
+            resetSettingsBtn.addEventListener('click', () => {
+                if (confirm('Reset all settings to defaults? This cannot be undone.')) {
+                    // Reset to defaults
+                    settings = {
+                        fontSize: 16,
+                        messageNotifications: true,
+                        soundEffects: false,
+                        vibration: true,
+                        saveConversations: true,
+                        analytics: false,
+                        crashReports: true,
+                        responseLength: 500
+                    };
+                    
+                    saveSettings();
+                    applySettings();
+                    showError('Settings reset successfully!');
+                }
+            });
+
+            checkUpdatesBtn.addEventListener('click', () => {
+                // Simulate update check
+                showError('Checking for updates...');
+                setTimeout(() => {
+                    showError('You have the latest version!');
+                }, 2000);
+            });
+
+            document.getElementById('saveProfileBtn').addEventListener('click', () => {
+                const newName = document.getElementById('profileNameInput').value.trim();
+                if (newName && newName !== currentUser.name) {
+                    currentUser.name = newName;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    showUserProfile();
+                    closeProfile();
+                    showError('Profile updated successfully!');
+                }
+            });
+
+            document.getElementById('changePasswordBtn').addEventListener('click', () => {
+                const newPassword = prompt('Enter new password:');
+                if (newPassword && newPassword.length >= 6) {
+                    if (confirm('Are you sure you want to change your password?')) {
+                        currentUser.password = newPassword;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        showError('Password changed successfully!');
+                    }
+                }
+            });
+
+            document.getElementById('exportDataBtn').addEventListener('click', () => {
+                const userData = {
+                    profile: currentUser,
+                    conversations: localStorage.getItem(`conversations_${currentUser.id}`),
+                    settings: {
+                        theme: localStorage.getItem('theme')
+                    },
+                    exportDate: new Date().toISOString()
+                };
+                
+                const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `nova-profile-${currentUser.email.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                closeProfile();
+                showError('Profile data exported!');
+            });
+
+            document.getElementById('deleteAccountBtn').addEventListener('click', () => {
+                if (confirm('⚠️ WARNING: This will permanently delete your account and all data. Are you sure?')) {
+                    if (confirm('🚨 FINAL WARNING: This action cannot be undone! Type "DELETE" to confirm:')) {
+                        const confirmation = prompt('Type "DELETE" to confirm account deletion:');
+                        if (confirmation === 'DELETE') {
+                            // Remove user from users list
+                            const users = JSON.parse(localStorage.getItem('users') || '[]');
+                            const updatedUsers = users.filter(u => u.email !== currentUser.email);
+                            localStorage.setItem('users', JSON.stringify(updatedUsers));
+                            
+                            // Remove user conversations
+                            localStorage.removeItem(`conversations_${currentUser.id}`);
+                            
+                            // Sign out
+                            currentUser = null;
+                            localStorage.removeItem('currentUser');
+                            closeProfile();
+                            checkAuth();
+                            showError('Account deleted successfully');
+                        }
+                    }
+                }
+            });
+
+            // Close overlays when clicking outside
+            searchOverlay.addEventListener('click', (e) => {
+                if (e.target === searchOverlay) {
+                    closeSearch();
+                }
+            });
+
+            // Prevent zoom on double tap
+            document.addEventListener('touchstart', (e) => {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            });
+
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', (e) => {
+                const now = Date.now();
+                if (now - lastTouchEnd <= 300) {
+                    e.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+
+            // Keyboard handling
+            window.addEventListener('resize', () => {
+                if (window.visualViewport) {
+                    const viewportHeight = window.visualViewport.height;
+                    document.documentElement.style.setProperty('--viewport-height', `${viewportHeight}px`);
+                }
+            });
+        }
+
+        // Data persistence
+        function saveUserConversations() {
+            if (currentUser) {
+                localStorage.setItem(`conversations_${currentUser.id}`, chatContainer.innerHTML);
+            }
+        }
+
+        function loadUserConversations() {
+            if (currentUser) {
+                const conversations = localStorage.getItem(`conversations_${currentUser.id}`);
+                if (conversations) {
+                    chatContainer.innerHTML = conversations;
+                    setTimeout(() => {
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }, 100);
+                } else {
+                    // Show welcome message for new users
+                    const welcomeMessage = `
+                        <div class="message ai">
+                            <div class="message-bubble">
+                                <div>Welcome to Nova AI, ${currentUser.name}! 🎉</div>
+                                <div>I'm your ultimate mobile AI assistant. I can help you with:</div>
+                                <div>• Answering questions</div>
+                                <div>• Generating images (with limitations)</div>
+                                <div>• Voice conversations</div>
+                                <div>• File uploads</div>
+                                <div>• Code generation with syntax highlighting</div>
+                                <div>• Markdown support</div>
+                                <div>• And much more!</div>
+                                <div>How can I help you today?</div>
+                                <div class="message-time">${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</div>
+                            </div>
+                        </div>
+                    `;
+                    chatContainer.innerHTML = welcomeMessage;
+                    
+                    // Save the welcome message so it persists
+                    saveUserConversations();
+                }
+            }
+        }
+
+        // Auto-save
+        setInterval(() => {
+            if (currentUser) {
+                saveUserConversations();
+            }
+        }, 30000);
+
+        // Global functions for onclick handlers
+        window.openFullscreen = openFullscreen;
+        window.closeFullscreenOverlay = closeFullscreenOverlay;
+        window.scrollToMessage = scrollToMessage;
+        window.copyCode = copyCode;
+        window.removeFile = removeFile;
+
+        // Make sure we have a clean input focus
+        messageInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (document.activeElement !== messageInput && 
+                    document.activeElement !== searchInput) {
+                    messageInput.focus();
+                }
+            }, 100);
+        });
+
+        // Add settings menu item
+        document.getElementById('menuPanel').innerHTML = `
+            <div class="menu-header">
+                <div class="menu-user-name" id="menuUserName">User</div>
+                <div class="menu-user-email" id="menuUserEmail">user@example.com</div>
+            </div>
+            <div class="menu-items">
+                <div class="menu-item" id="profileItem">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span class="menu-text">Profile</span>
+                </div>
+                <div class="menu-item" id="settingsItem">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 2.52 2.48-6.97 6.74L2 22l2.5-6.58 6.73 2.48L10.91 8.7 14 9.27l3.09-6.26z"/>
+                    </svg>
+                    <span class="menu-text">Settings</span>
+                </div>
+                <div class="menu-item" id="newChatItem">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    <span class="menu-text">New Chat</span>
+                </div>
+                <div class="menu-item" id="clearChatItem">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
+                    </svg>
+                    <span class="menu-text">Clear Chat</span>
+                </div>
+                <div class="menu-item" id="exportChatItem">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    </svg>
+                    <span class="menu-text">Export Chat</span>
+                </div>
+                <div class="menu-divider"></div>
+                <div class="menu-item" id="aboutItem">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4M12 8h.01"/>
+                    </svg>
+                    <span class="menu-text">About</span>
+                </div>
+                <div class="menu-divider"></div>
+                <div class="menu-item" id="signOutItem">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+                    </svg>
+                    <span class="menu-text">Sign Out</span>
+                </div>
+            </div>
+        `;
+    </script>
+</body>
+</html>
